@@ -510,6 +510,8 @@ proc mangleRecFieldName(m: BModule; field: PSym): Rope =
 proc genRecordFieldsAux(m: BModule, n: PNode,
                         rectype: PType,
                         check: var IntSet, unionPrefix = ""): Rope =
+  if m.module.name.s == "t":
+    echo "DEBUG1: module = ", m.module.name.s
   result = nil
   case n.kind
   of nkRecList:

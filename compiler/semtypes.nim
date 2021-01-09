@@ -505,7 +505,9 @@ proc semIdentWithPragma(c: PContext, kind: TSymKind, n: PNode,
   else:
     result = semIdentVis(c, kind, n, allowed)
 
-proc checkForOverlap(c: PContext, t: PNode, currentEx, branchIndex: int) =
+proc checkForOverlap(c: PContext, t: PNode, currentEx, branchIndex: int, recordCase: bool) =
+  if recordCase:
+    return
   let ex = t[branchIndex][currentEx].skipConv
   for i in 1..branchIndex:
     for j in 0..<t[i].len - 1:
@@ -544,7 +546,7 @@ proc semCaseBranchSetElem(c: PContext, t, b: PNode,
     inc(covered)
 
 proc semCaseBranch(c: PContext, t, branch: PNode, branchIndex: int,
-                   covered: var Int128) =
+                   covered: var Int128, recordCase = false) =
   let lastIndex = branch.len - 2
   for i in 0..lastIndex:
     var b = branch[i]
@@ -578,11 +580,11 @@ proc semCaseBranch(c: PContext, t, branch: PNode, branchIndex: int,
           branch.add(semCaseBranchSetElem(c, t, r[j], covered))
           # caution! last son of branch must be the actions to execute:
           swap(branch[^2], branch[^1])
-    checkForOverlap(c, t, i, branchIndex)
+    checkForOverlap(c, t, i, branchIndex, recordCase)
 
   # Elements added above needs to be checked for overlaps.
   for i in lastIndex.succ..<branch.len - 1:
-    checkForOverlap(c, t, i, branchIndex)
+    checkForOverlap(c, t, i, branchIndex, recordCase)
 
 proc toCover(c: PContext, t: PType): Int128 =
   let t2 = skipTypes(t, abstractVarRange-{tyTypeDesc})
@@ -692,7 +694,7 @@ proc semRecordCase(c: PContext, n: PNode, check: var IntSet, pos: var int,
     case n[i].kind
     of nkOfBranch:
       checkMinSonsLen(b, 2, c.config)
-      semCaseBranch(c, a, b, i, covered)
+      semCaseBranch(c, a, b, i, covered, recordCase = true)
     of nkElse:
       checkSonsLen(b, 1, c.config)
       if chckCovered and covered == toCover(c, a[0].typ):
@@ -701,7 +703,7 @@ proc semRecordCase(c: PContext, n: PNode, check: var IntSet, pos: var int,
     else: illFormedAst(n, c.config)
     delSon(b, b.len - 1)
     semRecordNodeAux(c, lastSon(n[i]), check, pos, b, rectype, hasCaseFields = true)
-  if chckCovered and covered != toCover(c, a[0].typ):
+  if chckCovered and covered < toCover(c, a[0].typ):
     if a[0].typ.skipTypes(abstractRange).kind == tyEnum:
       localError(c.config, a.info, "not all cases are covered; missing: $1" %
                  formatMissingEnums(c, a))
