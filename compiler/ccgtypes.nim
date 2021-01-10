@@ -510,8 +510,6 @@ proc mangleRecFieldName(m: BModule; field: PSym): Rope =
 proc genRecordFieldsAux(m: BModule, n: PNode,
                         rectype: PType,
                         check: var IntSet, unionPrefix = ""): Rope =
-  if m.module.name.s == "t":
-    echo "DEBUG1: module = ", m.module.name.s
   result = nil
   case n.kind
   of nkRecList:
@@ -519,6 +517,10 @@ proc genRecordFieldsAux(m: BModule, n: PNode,
       result.add(genRecordFieldsAux(m, n[i], rectype, check, unionPrefix))
   of nkRecCase:
     if n[0].kind != nkSym: internalError(m.config, n.info, "genRecordFieldsAux")
+    if m.module.name.s == "t":
+      echo "DEBUG1: module = ", m.module.name.s
+      echo "DEBUG1: node.kind = ", n.kind
+      echo "DEBUG1: node.len = ", n.len
     result.add(genRecordFieldsAux(m, n[0], rectype, check, unionPrefix))
     # prefix mangled name with "_U" to avoid clashes with other field names,
     # since identifiers are not allowed to start with '_'
@@ -526,6 +528,7 @@ proc genRecordFieldsAux(m: BModule, n: PNode,
     for i in 1..<n.len:
       case n[i].kind
       of nkOfBranch, nkElse:
+        echo "DEBUG2", n[i]
         let k = lastSon(n[i])
         if k.kind != nkSym:
           let structName = "_" & mangleRecFieldName(m, n[0].sym) & "_" & $i

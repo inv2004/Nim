@@ -185,16 +185,16 @@ proc semConstructFields(c: PContext, n: PNode,
       let status = semConstructFields(c, innerRecords, constrCtx, flags)
       if status notin {initNone, initUnknown}:
         mergeInitStatus(result, status)
-        if selectedBranch != -1:
-          let prevFields = fieldsPresentInBranch(selectedBranch)
-          let currentFields = fieldsPresentInBranch(i)
-          localError(c.config, constrCtx.initExpr.info,
-            ("The fields '$1' and '$2' cannot be initialized together, " &
-            "because they are from conflicting branches in the case object.") %
-            [prevFields, currentFields])
-          result = initConflict
-        else:
-          selectedBranch = i
+        # if selectedBranch != -1:
+        #   let prevFields = fieldsPresentInBranch(selectedBranch)
+        #   let currentFields = fieldsPresentInBranch(i)
+        #   localError(c.config, constrCtx.initExpr.info,
+        #     ("The fields '$1' and '$2' cannot be initialized together, " &
+        #     "because they are from conflicting branches in the case object.") %
+        #     [prevFields, currentFields])
+        #   result = initConflict
+        # else:
+        selectedBranch = i
 
     if selectedBranch != -1:
       template badDiscriminatorError =
@@ -283,7 +283,8 @@ proc semConstructFields(c: PContext, n: PNode,
             if diff.len != 0:
               valuesInConflictError(diff)
           else:
-            wrongBranchError(failedBranch)
+            discard
+            # wrongBranchError(failedBranch)
 
       # When a branch is selected with a partial match, some of the fields
       # that were not initialized may be mandatory. We must check for this:

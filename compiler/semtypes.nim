@@ -457,7 +457,7 @@ proc semTuple(c: PContext, n: PNode, prev: PType): PType =
       field.position = counter
       inc(counter)
       if containsOrIncl(check, field.name.id):
-        localError(c.config, a[j].info, "attempt to redefine: '" & field.name.s & "'")
+        localError(c.config, a[j].info, "attempt to 4: '" & field.name.s & "'")
       else:
         result.n.add newSymNode(field)
         addSonSkipIntLit(result, typ, c.idgen)
@@ -792,7 +792,8 @@ proc semRecordNodeAux(c: PContext, n: PNode, check: var IntSet, pos: var int,
         f.flags.incl {sfImportc, sfExportc} * fieldOwner.flags
       inc(pos)
       if containsOrIncl(check, f.name.id):
-        localError(c.config, info, "attempt to redefine: '" & f.name.s & "'")
+        discard
+        # localError(c.config, info, "attempt to redefine1: '" & f.name.s & "'")
       if a.kind == nkEmpty: father.add newSymNode(f)
       else: a.add newSymNode(f)
       styleCheckDef(c.config, f)
@@ -803,7 +804,7 @@ proc semRecordNodeAux(c: PContext, n: PNode, check: var IntSet, pos: var int,
     # inherited from generic/partial specialized parent second check.
     # There is no branch validity check here
     if containsOrIncl(check, n.sym.name.id):
-      localError(c.config, n.info, "attempt to redefine: '" & n.sym.name.s & "'")
+      localError(c.config, n.info, "attempt to redefine2: '" & n.sym.name.s & "'")
     father.add n
   of nkEmpty:
     if father.kind in {nkElse, nkOfBranch}:
@@ -1286,7 +1287,7 @@ proc semProcTypeNode(c: PContext, n, genericParams: PNode,
       if def != nil and def.kind != nkEmpty:
         arg.ast = copyTree(def)
       if containsOrIncl(check, arg.name.id):
-        localError(c.config, a[j].info, "attempt to redefine: '" & arg.name.s & "'")
+        localError(c.config, a[j].info, "attempt to redefine3: '" & arg.name.s & "'")
       result.n.add newSymNode(arg)
       rawAddSon(result, finalType)
       addParamOrResult(c, arg, kind)
